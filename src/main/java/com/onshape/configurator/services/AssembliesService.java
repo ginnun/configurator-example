@@ -29,17 +29,24 @@ import com.onshape.api.responses.*;
 import com.onshape.api.types.OnshapeDocument;
 import com.onshape.configurator.model.ConfiguredAssembly;
 import com.onshape.configurator.model.ConfiguredPart;
+import com.onshape.configurator.resources.ConfiguratorResource;
+
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  *
  * @author Peter Harman peter.harman@cae.tech
  */
 public class AssembliesService {
+    private static final Logger LOGGER = Logger.getLogger(AssembliesService.class.getName());
 
     private final Onshape onshape;
-
     public AssembliesService(Onshape onshape) {
         this.onshape = onshape;
     }
@@ -93,16 +100,35 @@ public class AssembliesService {
     }
 
     private AssembliesGetAssemblyDefinitionResponseRootAssemblyOccurrences getOccurrence(AssembliesGetAssemblyDefinitionResponse assemblyDefinition, String... path) {
-        return Stream.of(assemblyDefinition.getRootAssembly().getOccurrences()).filter((occ) -> Arrays.equals(path, occ.getPath())).findFirst().get();
+        return  Stream.of(assemblyDefinition.getRootAssembly().getOccurrences()).filter((occ) -> Arrays.equals(path, occ.getPath())).findFirst()
+                .orElseGet(
+                        () -> {
+                            LOGGER.log(Level.WARNING,
+                                    () -> String.format("Can't find occurrences for paths. root assembly document: %s, paths: %s",
+                                            assemblyDefinition.getRootAssembly().documentId,String.join("/",path) ));
+                            return null;
+                        }
+                );
     }
 
     private AssembliesGetAssemblyDefinitionResponseSubAssemblies getSubAssemblyDefinition(AssembliesGetAssemblyDefinitionResponse assemblyDefinition, OnshapeDocument target) {
-        return Stream.of(assemblyDefinition.getSubAssemblies()).filter((subass) -> subass.getDocument().equals(target)).findFirst().get();
+        return Stream.of(assemblyDefinition.getSubAssemblies()).filter((subass) -> subass.getDocument().equals(target)).findFirst()
+                .orElseGet(
+                        () -> {
+                            LOGGER.log(Level.WARNING,
+                                    () -> String.format(
+                                            "Can't find subassembly definitions for target document. root assembly document: %s, target document: %s",
+                                            assemblyDefinition.getRootAssembly().documentId,
+                                            target.getDocumentId()
+                                    ));
+                            return null;
+                        }
+                );
     }
 
     private ConfiguredPart makePart(AssembliesGetAssemblyDefinitionResponse assemblyDefinition, String configuration, String partId, OnshapeDocument instanceDocument, String... path) {
         AssembliesGetAssemblyDefinitionResponseRootAssemblyOccurrences occurrence = getOccurrence(assemblyDefinition, path);
-        if (!occurrence.getHidden()) {
+        if (occurrence != null && !occurrence.getHidden()) {
             ConfiguredPart part = new ConfiguredPart();
             part.setInstanceId(path[path.length - 1]);
             part.setConfiguration(configuration);
@@ -116,7 +142,7 @@ public class AssembliesService {
 
     private ConfiguredAssembly.SubAssembly makeSubassembly(AssembliesGetAssemblyDefinitionResponse assemblyDefinition, OnshapeDocument instanceDocument, String... path) {
         AssembliesGetAssemblyDefinitionResponseRootAssemblyOccurrences occurrence = getOccurrence(assemblyDefinition, path);
-        if (!occurrence.getHidden()) {
+        if (occurrence != null && !occurrence.getHidden()) {
             ConfiguredAssembly.SubAssembly subassembly = new ConfiguredAssembly.SubAssembly();
             subassembly.setTransform(occurrence.getTransform());
             subassembly.setInstanceId(path[path.length - 1]);

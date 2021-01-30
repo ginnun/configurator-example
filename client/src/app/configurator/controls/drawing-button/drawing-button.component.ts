@@ -26,7 +26,7 @@ export class DrawingButtonComponent implements OnInit {
     const baseUrl = '/api/drawings'
       + this.configuratorService.getURLPath(this.documentId, this.wvmType, this.wvmId, this.elementId)
       + '/drawing/';
-    this.drawingElements.forEach((de) => {
+    this.drawingElements && this.drawingElements.forEach((de) => {
       this.http.get(baseUrl + de).subscribe((drawing) => this.drawings.push(drawing as ConfigurableDrawing));
     });
   }

@@ -71,7 +71,7 @@ public class PartResource {
             // TODO: Could store a future so that multple threads don't ask for the same resource
             file = onshape.parts().exportStl()
                     .configuration(configuration)
-                    .mode("text")
+                    .mode("binary")
                     .units("meter")
                     .linkDocumentId(linkDocumentId)
                     .call(documentId, wvm, wvmId, elementId, partId).getFile();

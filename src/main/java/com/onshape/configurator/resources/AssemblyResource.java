@@ -67,7 +67,9 @@ public class AssemblyResource {
             ConfiguredAssembly assembly = assembliesService.getAssembly(document, configuration);
             return Response.ok(assembly).build();
         } catch (OnshapeException ex) {
-            Logger.getLogger(ConfiguratorResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConfiguratorResource.class.getName()).log(Level.SEVERE,
+                    String.format("Error while getting assembly. document id: %s, wvm: %s, wvm id: %s, element id: %s, configuration: %s",
+                            documentId, wvm.toString(), wvmId, elementId, configuration), ex);
             return Response.status(500, ex.getMessage()).build();
         }
     }

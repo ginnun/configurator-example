@@ -43,31 +43,37 @@ public class PartsService {
     }
 
     public Appearance getAppearance(OnshapeDocument document, String partId, String configurationString) throws OnshapeException {
-        // Note: The following does not use the client request object as the configuration parameter is missing
-        MetadataGetPartMetadataResponse partMeta = onshape.call("get",
-                "/metadata/d/:did/[wvm]/:wvm/e/:eid/p/:pid",
-                null,
-                onshape.buildMap("pid", partId, 
-                        "did", document.getDocumentId(), 
-                        "wvmType", document.getWVM(), 
-                        "wvm", document.getWVMId(), 
-                        "eid", document.getElementId()),
-                onshape.buildMap("configuration", configurationString),
-                MetadataGetPartMetadataResponse.class);
         Appearance appearance = new Appearance();
         appearance.setOpacity(1);
         appearance.setColor(new Number[]{0, 0, 0});
-        for (Map property : partMeta.getProperties()) {
-            if ("Appearance".equals(property.get("name"))) {
-                Map value = (Map) property.get("value");
-                appearance.setOpacity((Number) value.get("opacity"));
-                Map color = (Map) value.get("color");
-                Number red = (Number) color.get("red");
-                Number green = (Number) color.get("green");
-                Number blue = (Number) color.get("blue");
-                appearance.setColor(new Number[]{red, green, blue});
-                return appearance;
+        try {
+            // Note: The following does not use the client request object as the configuration parameter is missing
+            MetadataGetPartMetadataResponse partMeta = onshape.call("get",
+                    "/metadata/d/:did/[wvm]/:wvm/e/:eid/p/:pid",
+                    null,
+                    onshape.buildMap("pid", partId,
+                            "did", document.getDocumentId(),
+                            "wvmType", document.getWVM(),
+                            "wvm", document.getWVMId(),
+                            "eid", document.getElementId()),
+                    onshape.buildMap("configuration", configurationString),
+                    MetadataGetPartMetadataResponse.class);
+            appearance.setOpacity(1);
+            appearance.setColor(new Number[]{0, 0, 0});
+            for (Map property : partMeta.getProperties()) {
+                if ("Appearance".equals(property.get("name"))) {
+                    Map value = (Map) property.get("value");
+                    appearance.setOpacity((Number) value.get("opacity"));
+                    Map color = (Map) value.get("color");
+                    Number red = (Number) color.get("red");
+                    Number green = (Number) color.get("green");
+                    Number blue = (Number) color.get("blue");
+                    appearance.setColor(new Number[]{red, green, blue});
+                    return appearance;
+                }
             }
+        } catch (OnshapeException e) {
+            throw e;
         }
         return appearance;
     }

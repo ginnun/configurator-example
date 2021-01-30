@@ -71,7 +71,21 @@ public class ExportsResource {
                 elementId);
         return Response.ok(exportsService.export(assembly, configuration, format),
                 MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("Content-Disposition", "attachment; filename=export." + format.toLowerCase() + "")
+                .header("Content-Disposition", "attachment; filename=export." + format.toLowerCase())
                 .build();
+    }
+
+    @GET
+    @Compress
+    @Produces({MediaType.APPLICATION_OCTET_STREAM})
+    @Path("/d/{document_id}/{wvm}/{wvm_id}/e/{element_id}/c/{configuration}")
+    public Response export(@Context ExportsService exportsService,
+                           @PathParam("document_id") String documentId,
+                           @PathParam("wvm") WVM wvm,
+                           @PathParam("wvm_id") String wvmId,
+                           @PathParam("element_id") String elementId,
+                           @PathParam("configuration") String configuration) throws OnshapeException {
+
+        return export(exportsService, documentId, wvm, wvmId, elementId, configuration, "step");
     }
 }
